@@ -20,7 +20,7 @@ gcMainPath = Sys(5)+"\"          && 设置当前根目录为系统路径 +SYS(2003)
 *SET DEFAULT TO c:\ 
 SET DEFAULT TO &gcMainPath
 
-CD "\EbERP\"
+CD "\Ebwjxc\"
 SET PATH TO ;DATA;FORMS;LIBS;MENUS;PROGS;REPORTS;BMP;EXCEL
 *----------------------------------------------
 
