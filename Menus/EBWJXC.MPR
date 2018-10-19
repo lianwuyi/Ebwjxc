@@ -1,6 +1,6 @@
 *       *********************************************************
 *       *                                                         
-*       * 10/18/18             EBWJXC.MPR               17:03:24  
+*       * 08/07/18              EBERP.MPR               22:59:02  
 *       *                                                         
 *       *********************************************************
 *       *                                                         
@@ -15,6 +15,107 @@
 *       *                                                         
 *       *********************************************************
 
+* To attach this menu to your Top-Level form, 
+* call it from the Init event of the form:
+
+* Syntax: DO <mprname> WITH <oFormRef> [,<cMenuname>|<lRename>][<lUniquePopups>]
+
+*	oFormRef - form object reference (THIS)
+*	cMenuname - name for menu (this is required for Append menus - see below)
+*	lRename - renames Name property of your form
+*	lUniquePopups - determines whether to generate unique ids for popup names
+			
+* 	example:
+
+*	PROCEDURE Init
+*		DO mymenu.mpr WITH THIS,.T.
+*	ENDPROC
+
+* Use the optional 2nd parameter if you plan on running multiple instances
+* of your Top-Level form. The preferred method is to create an empty string
+* variable and pass it by reference so you can receive the form name after
+* the MPR file is run. You can later use this reference to destroy the menu.
+
+*	PROCEDURE Init
+*		LOCAL cGetMenuName
+*		cGetMenuName = ""
+*		DO mymenu.mpr WITH THIS, m.cGetMenuName
+*	ENDPROC
+
+* The logical lRename parameter will change the name property of your 
+* form to the same name given the menu and may cause conflicts in your 
+* code if you directly reference the form by name.
+
+* You will also need to remove the menu when the form is destroyed so that it does 
+* not remain in memory unless you wish to reactivate it later in a new form.
+
+* If you passed the optional lRename parameter as .T. as in the above example, 
+* you can easily remove the menu in the form's Destroy event as shown below.
+* This strategy is ideal when using multiple instances of Top-Level forms.
+
+*	example:
+
+*	PROCEDURE Destroy
+*		RELEASE MENU (THIS.Name) EXTENDED
+*	ENDPROC
+
+* Using Append/Before/After location options:
+
+*   You might want to append a menu to an existing Top-Level form by setting 
+*   the Location option in the General Options dialog. In order to do this, you 
+*   must pass the name of the menu in which to attach the new one. The second
+*   parameter is required here. If you originally created the menu with the lRename 
+*   parameter = .T., then you can update the menu with code similar to the following:
+
+*	example:
+
+*	DO mymenu2.mpr WITH THISFORM,THISFORM.name
+*
+* Using lUniquePopups:
+
+*   If you are running this menu multiple times in your application, such as in multiple 
+*   instances of the same top-level form, you should pass .T. to the lUniquePopups 
+*   parameter so that unique popup names are generated to avoid possible conflicts.
+
+*	example:
+
+*	PROCEDURE Init
+*		DO mymenu.mpr WITH THIS,.T.,.T.
+*	ENDPROC
+*
+* Note: Parm4-Parm9 are not reserved and freely available for use with your menu code.
+*
+
+LPARAMETERS oFormRef, getMenuName, lUniquePopups, parm4, parm5, parm6, parm7, parm8, parm9
+LOCAL cMenuName, nTotPops, a_menupops, cTypeParm2, cSaveFormName
+IF TYPE("m.oFormRef") # "O" OR ;
+  LOWER(m.oFormRef.BaseClass) # 'form' OR ;
+  m.oFormRef.ShowWindow # 2
+	MESSAGEBOX([This menu can only be called from a Top-Level form. Ensure that your form's ShowWindow property is set to 2. Read the header section of the menu's MPR file for more details.])
+	RETURN
+ENDIF
+m.cTypeParm2 = TYPE("m.getMenuName")
+m.cMenuName = SYS(2015)
+m.cSaveFormName = m.oFormRef.Name
+IF m.cTypeParm2 = "C" OR (m.cTypeParm2 = "L" AND m.getMenuName)
+	m.oFormRef.Name = m.cMenuName
+ENDIF
+IF m.cTypeParm2 = "C" AND !EMPTY(m.getMenuName)
+	m.cMenuName = m.getMenuName
+ENDIF
+DIMENSION a_menupops[5]
+IF TYPE("m.lUniquePopups")="L" AND m.lUniquePopups
+	FOR nTotPops = 1 TO ALEN(a_menupops)
+		a_menupops[m.nTotPops]= SYS(2015)
+	ENDFOR
+ELSE
+	a_menupops[1]="系统设置e"
+	a_menupops[2]="_56a1808cl"
+	a_menupops[3]="发票管理f"
+	a_menupops[4]="附加功能g"
+	a_menupops[5]="关于a"
+ENDIF
+
 
 *       *********************************************************
 *       *                                                         
@@ -23,739 +124,108 @@
 *       *********************************************************
 *
 
-SET SYSMENU TO
-SET SYSMENU AUTOMATIC
+LOCAL lHasNewMenu
+lHasNewMenu = (TYPE("CNTPAD(m.cMenuName)") # "N")
+IF m.lHasNewMenu
+	DEFINE MENU (m.cMenuName) IN (m.oFormRef.Name) BAR
+ENDIF
 
-DEFINE PAD _msm_file OF _MSYSMENU PROMPT "系统设置(\<A)" COLOR SCHEME 3 ;
-	NEGOTIATE  LEFT, NONE ;
-	KEY ALT+F, ""
-DEFINE PAD _5bl10k3rd OF _MSYSMENU PROMPT "基础资料(\<J)" COLOR SCHEME 3 ;
+DEFINE PAD _59l1d9gao OF (m.cMenuName) PROMPT "系统设置(\<E)" COLOR SCHEME 3 ;
+	KEY ALT+E, ""
+DEFINE PAD _59l1d9gap OF (m.cMenuName) PROMPT "基础信息(\<J)" COLOR SCHEME 3 ;
 	KEY ALT+J, ""
-DEFINE PAD _5bl10k3re OF _MSYSMENU PROMPT "库存管理(\<K)" COLOR SCHEME 3 ;
-	KEY ALT+K, ""
-DEFINE PAD _5bl10k3rf OF _MSYSMENU PROMPT "财务管理(\<C)" COLOR SCHEME 3 ;
-	KEY ALT+C, ""
-DEFINE PAD _5bl10k3rg OF _MSYSMENU PROMPT "转仓盘点(\<Z)" COLOR SCHEME 3 ;
-	KEY ALT+Z, ""
-DEFINE PAD _msm_systm OF _MSYSMENU PROMPT "关于(\<H)" COLOR SCHEME 3 ;
-	KEY ALT+H, ""
-ON PAD _msm_file OF _MSYSMENU ACTIVATE POPUP 系统设置a
-ON PAD _5bl10k3rd OF _MSYSMENU ACTIVATE POPUP 基础资料j
-ON PAD _5bl10k3re OF _MSYSMENU ACTIVATE POPUP 库存管理k
-ON PAD _5bl10k3rf OF _MSYSMENU ACTIVATE POPUP 财务管理c
-ON PAD _5bl10k3rg OF _MSYSMENU ACTIVATE POPUP 转仓盘点z
-ON PAD _msm_systm OF _MSYSMENU ACTIVATE POPUP 关于h
+DEFINE PAD _59l1d9gaq OF (m.cMenuName) PROMPT "发票管理(\<F)" COLOR SCHEME 3 ;
+	KEY ALT+F, ""
+DEFINE PAD _59l1d9gar OF (m.cMenuName) PROMPT "附加功能(\<G)" COLOR SCHEME 3 ;
+	KEY ALT+G, ""
+DEFINE PAD _59l1d9gas OF (m.cMenuName) PROMPT "关于(\<A)" COLOR SCHEME 3 ;
+	KEY ALT+A, ""
+ON PAD _59l1d9gao OF (m.cMenuName) ACTIVATE POPUP (a_menupops[1])
+ON PAD _59l1d9gap OF (m.cMenuName) ACTIVATE POPUP (a_menupops[2])
+ON PAD _59l1d9gaq OF (m.cMenuName) ACTIVATE POPUP (a_menupops[3])
+ON PAD _59l1d9gar OF (m.cMenuName) ACTIVATE POPUP (a_menupops[4])
+ON PAD _59l1d9gas OF (m.cMenuName) ACTIVATE POPUP (a_menupops[5])
 
-DEFINE POPUP 系统设置a MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF 系统设置a PROMPT "\-"
-DEFINE BAR 2 OF 系统设置a PROMPT "操作员信息"
-DEFINE BAR 3 OF 系统设置a PROMPT "\-"
-DEFINE BAR 4 OF 系统设置a PROMPT "退出系统"
-DEFINE BAR 5 OF 系统设置a PROMPT "\-"
-ON SELECTION BAR 2 OF 系统设置a DO form ..\FORMS\czysz.scx
-ON SELECTION BAR 4 OF 系统设置a do ..\progs\quit.prg
+DEFINE POPUP (a_menupops[1]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
+DEFINE BAR 1 OF (a_menupops[1]) PROMPT "\-"
+DEFINE BAR 2 OF (a_menupops[1]) PROMPT "系统设置"
+DEFINE BAR 3 OF (a_menupops[1]) PROMPT "\-"
+DEFINE BAR 4 OF (a_menupops[1]) PROMPT "退出系统"
+DEFINE BAR 5 OF (a_menupops[1]) PROMPT "\-"
+ON SELECTION BAR 2 OF (a_menupops[1]) do form 0系统设置.scx
+ON SELECTION BAR 4 OF (a_menupops[1]) do a_退出系统.prg
 
-DEFINE POPUP 基础资料j MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF 基础资料j PROMPT "\-"
-DEFINE BAR 2 OF 基础资料j PROMPT "客户录入" ;
-	SKIP FOR c客户录入<>"1"
-DEFINE BAR 3 OF 基础资料j PROMPT "客户查询" ;
-	SKIP FOR c客户查询<>"1"
-DEFINE BAR 4 OF 基础资料j PROMPT "\-"
-DEFINE BAR 5 OF 基础资料j PROMPT "供应商录入" ;
-	SKIP FOR c供应商录入<>"1"
-DEFINE BAR 6 OF 基础资料j PROMPT "供应商查询" ;
-	SKIP FOR c供应商查询<>"1"
-DEFINE BAR 7 OF 基础资料j PROMPT "\-"
-DEFINE BAR 8 OF 基础资料j PROMPT "类别设置" ;
-	SKIP FOR c产品录入<>"1"
-DEFINE BAR 9 OF 基础资料j PROMPT "产品代码录入" ;
-	SKIP FOR c产品录入<>"1"
-DEFINE BAR 10 OF 基础资料j PROMPT "产品代码查询" ;
-	SKIP FOR c产品查询<>"1"
-DEFINE BAR 11 OF 基础资料j PROMPT "\-"
-ON SELECTION BAR 2 OF 基础资料j ;
-	DO _5bl10k3rh ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 3 OF 基础资料j ;
-	DO _5bl10k3ri ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 5 OF 基础资料j ;
-	DO _5bl10k3rj ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 6 OF 基础资料j ;
-	DO _5bl10k3rk ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 8 OF 基础资料j ;
-	DO _5bl10k3rl ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 9 OF 基础资料j ;
-	DO _5bl10k3rm ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 10 OF 基础资料j ;
-	DO _5bl10k3rn ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
+DEFINE POPUP (a_menupops[2]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
+DEFINE BAR 1 OF (a_menupops[2]) PROMPT "\-"
+DEFINE BAR 2 OF (a_menupops[2]) PROMPT "产品录入"
+DEFINE BAR 3 OF (a_menupops[2]) PROMPT "产品查询"
+DEFINE BAR 4 OF (a_menupops[2]) PROMPT "\-"
+ON SELECTION BAR 2 OF (a_menupops[2]) do form ..\forms\c产品录入.scx
+ON SELECTION BAR 3 OF (a_menupops[2]) do form ..\forms\c产品查询.scx
 
-DEFINE POPUP 库存管理k MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF 库存管理k PROMPT "\-"
-DEFINE BAR 2 OF 库存管理k PROMPT "货架号设置"
-DEFINE BAR 3 OF 库存管理k PROMPT "\-"
-DEFINE BAR 4 OF 库存管理k PROMPT "入库录入" ;
-	SKIP FOR c入库录入<>"1"
-DEFINE BAR 5 OF 库存管理k PROMPT "入库查询" ;
-	SKIP FOR c入库查询<>"1"
-DEFINE BAR 6 OF 库存管理k PROMPT "\-"
-DEFINE BAR 7 OF 库存管理k PROMPT "查询当前库存" ;
-	SKIP FOR c库存查询<>"1"
-DEFINE BAR 8 OF 库存管理k PROMPT "\-"
-DEFINE BAR 9 OF 库存管理k PROMPT "出库录入"
-DEFINE BAR 10 OF 库存管理k PROMPT "出库查询" ;
-	SKIP FOR c出库查询<>"1"
-DEFINE BAR 11 OF 库存管理k PROMPT "\-"
-ON SELECTION BAR 2 OF 库存管理k ;
-	DO _5bl10k3ro ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 4 OF 库存管理k ;
-	DO _5bl10k3rp ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 5 OF 库存管理k ;
-	DO _5bl10k3rq ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 7 OF 库存管理k ;
-	DO _5bl10k3rr ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 9 OF 库存管理k ;
-	DO _5bl10k3rs ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 10 OF 库存管理k ;
-	DO _5bl10k3rt ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
+DEFINE POPUP (a_menupops[3]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
+DEFINE BAR 1 OF (a_menupops[3]) PROMPT "\-"
+DEFINE BAR 2 OF (a_menupops[3]) PROMPT "发票录入"
+DEFINE BAR 3 OF (a_menupops[3]) PROMPT "发票查询"
+DEFINE BAR 4 OF (a_menupops[3]) PROMPT "\-"
+DEFINE BAR 5 OF (a_menupops[3]) PROMPT "付款录入"
+DEFINE BAR 6 OF (a_menupops[3]) PROMPT "付款查询"
+DEFINE BAR 7 OF (a_menupops[3]) PROMPT "\-"
+DEFINE BAR 8 OF (a_menupops[3]) PROMPT "综合查询"
+DEFINE BAR 9 OF (a_menupops[3]) PROMPT "\-"
+ON SELECTION BAR 2 OF (a_menupops[3]) do form ..\forms\f发票扫描.scx
+ON SELECTION BAR 3 OF (a_menupops[3]) do form ..\forms\f发票查询.scx
 
-DEFINE POPUP 财务管理c MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF 财务管理c PROMPT "\-"
-DEFINE BAR 2 OF 财务管理c PROMPT "收录录入"
-DEFINE BAR 3 OF 财务管理c PROMPT "收据查询"
-DEFINE BAR 4 OF 财务管理c PROMPT "应收款查询"
-DEFINE BAR 5 OF 财务管理c PROMPT "\-"
-DEFINE BAR 6 OF 财务管理c PROMPT "付款单录入"
-DEFINE BAR 7 OF 财务管理c PROMPT "付款单查询"
-DEFINE BAR 8 OF 财务管理c PROMPT "应付款查询"
-DEFINE BAR 9 OF 财务管理c PROMPT "\-"
-ON SELECTION BAR 2 OF 财务管理c ;
-	DO _5bl10k3ru ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 3 OF 财务管理c ;
-	DO _5bl10k3rv ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 4 OF 财务管理c ;
-	DO _5bl10k3rw ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 6 OF 财务管理c ;
-	DO _5bl10k3rx ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 7 OF 财务管理c ;
-	DO _5bl10k3ry ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 8 OF 财务管理c ;
-	DO _5bl10k3rz ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
+DEFINE POPUP (a_menupops[4]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
+DEFINE BAR 1 OF (a_menupops[4]) PROMPT "\-"
+DEFINE BAR 2 OF (a_menupops[4]) PROMPT "标签录入"
+DEFINE BAR 3 OF (a_menupops[4]) PROMPT "标签查询"
+DEFINE BAR 4 OF (a_menupops[4]) PROMPT "\-"
+DEFINE BAR 5 OF (a_menupops[4]) PROMPT "短信发送"
+DEFINE BAR 6 OF (a_menupops[4]) PROMPT "短信查询"
+DEFINE BAR 7 OF (a_menupops[4]) PROMPT "短信充值"
+DEFINE BAR 8 OF (a_menupops[4]) PROMPT "\-"
+ON SELECTION BAR 2 OF (a_menupops[4]) do form ..\forms\b标签录入.scx
+ON SELECTION BAR 3 OF (a_menupops[4]) do form ..\forms\b标签查询.scx
 
-DEFINE POPUP 转仓盘点z MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF 转仓盘点z PROMPT "\-"
-DEFINE BAR 2 OF 转仓盘点z PROMPT "转仓录入" ;
-	SKIP FOR c转仓录入<>"1"
-DEFINE BAR 3 OF 转仓盘点z PROMPT "转仓查询" ;
-	SKIP FOR c转仓查询<>"1"
-DEFINE BAR 4 OF 转仓盘点z PROMPT "\-"
-DEFINE BAR 5 OF 转仓盘点z PROMPT "盘点录入" ;
-	SKIP FOR c盘点查录<>"1"
-DEFINE BAR 6 OF 转仓盘点z PROMPT "盘点查询" ;
-	SKIP FOR c盘点查录<>"1"
-DEFINE BAR 7 OF 转仓盘点z PROMPT "\-"
-ON SELECTION BAR 2 OF 转仓盘点z ;
-	DO _5bl10k3s0 ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 3 OF 转仓盘点z ;
-	DO _5bl10k3s1 ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 5 OF 转仓盘点z ;
-	DO _5bl10k3s2 ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
-ON SELECTION BAR 6 OF 转仓盘点z ;
-	DO _5bl10k3s3 ;
-	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
+DEFINE POPUP (a_menupops[5]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
+DEFINE BAR 1 OF (a_menupops[5]) PROMPT "\-"
+DEFINE BAR 2 OF (a_menupops[5]) PROMPT "在线帮助"
+DEFINE BAR 3 OF (a_menupops[5]) PROMPT "系列产品"
+DEFINE BAR 4 OF (a_menupops[5]) PROMPT "\-"
+DEFINE BAR 5 OF (a_menupops[5]) PROMPT "公司网站"
+DEFINE BAR 6 OF (a_menupops[5]) PROMPT "\-"
+DEFINE BAR 7 OF (a_menupops[5]) PROMPT "About"
+DEFINE BAR 8 OF (a_menupops[5]) PROMPT "\-"
+ON SELECTION BAR 5 OF (a_menupops[5]) ;
+	DO _59l1d9gat ;
+	IN LOCFILE("\EBERP\MENUS\EBERP" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBERP?")
+ON SELECTION BAR 7 OF (a_menupops[5]) do form about.scx
 
-DEFINE POPUP 关于h MARGIN RELATIVE SHADOW COLOR SCHEME 4
-DEFINE BAR 1 OF 关于h PROMPT "\-"
-DEFINE BAR 2 OF 关于h PROMPT "用户设置" ;
-	SKIP FOR c工作职责<>"系统管理员"
-DEFINE BAR 3 OF 关于h PROMPT "\-"
-DEFINE BAR 4 OF 关于h PROMPT "\<About"
-DEFINE BAR 5 OF 关于h PROMPT "\-"
-ON SELECTION BAR 2 OF 关于h do form ..\forms\account.scx
-ON SELECTION BAR 4 OF 关于h goApp.DoForm("About.scx")
+ACTIVATE MENU (m.cMenuName) NOWAIT
+
+IF m.cTypeParm2 = "C"
+	m.getMenuName = m.cMenuName
+	m.oFormRef.Name = m.cSaveFormName 
+ENDIF
 
 
 *       *********************************************************
 *       *                                                         
-*       * _5BL10K3RH  ON SELECTION BAR 2 OF POPUP 基础资料j       
+*       * _59L1D9GAT  ON SELECTION BAR 5 OF POPUP 关于a           
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   17         
-*       * Called By:  ON SELECTION BAR 2 OF POPUP 基础资料j       
-*       * Prompt:     客户录入                                    
+*       * From Menu:  EBERP.MPR,            Record:   65          
+*       * Called By:  ON SELECTION BAR 5 OF POPUP 关于a           
+*       * Prompt:     公司网站                                    
 *       * Snippet:    1                                           
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _5bl10k3rh
-CLOSE ALL
+PROCEDURE _59l1d9gat
+DECLARE INTEGER ShellExecute IN shell32.DLL INTEGER HWND, STRING,;
+        STRING lpszFile,STRING ,STRING ,INTEGER
+ lpszFile='www.ebongsoft.com'
+ =ShellExecute(0,0,lpszFile , 0,0,1)
 
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\客户录入.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RI  ON SELECTION BAR 3 OF POPUP 基础资料j       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   18         
-*       * Called By:  ON SELECTION BAR 3 OF POPUP 基础资料j       
-*       * Prompt:     客户查询                                    
-*       * Snippet:    2                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3ri
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\客户查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RJ  ON SELECTION BAR 5 OF POPUP 基础资料j       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   21         
-*       * Called By:  ON SELECTION BAR 5 OF POPUP 基础资料j       
-*       * Prompt:     供应商录入                                  
-*       * Snippet:    3                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rj
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\供应商录入.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RK  ON SELECTION BAR 6 OF POPUP 基础资料j       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   22         
-*       * Called By:  ON SELECTION BAR 6 OF POPUP 基础资料j       
-*       * Prompt:     供应商查询                                  
-*       * Snippet:    4                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rk
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\供应商查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RL  ON SELECTION BAR 8 OF POPUP 基础资料j       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   25         
-*       * Called By:  ON SELECTION BAR 8 OF POPUP 基础资料j       
-*       * Prompt:     类别设置                                    
-*       * Snippet:    5                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rl
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\类别设置.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RM  ON SELECTION BAR 9 OF POPUP 基础资料j       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   26         
-*       * Called By:  ON SELECTION BAR 9 OF POPUP 基础资料j       
-*       * Prompt:     产品代码录入                                
-*       * Snippet:    6                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rm
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\产品代码录入.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RN  ON SELECTION BAR 10 OF POPUP 基础资料j      
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   27         
-*       * Called By:  ON SELECTION BAR 10 OF POPUP 基础资料j      
-*       * Prompt:     产品代码查询                                
-*       * Snippet:    7                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rn
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\产品代码查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RO  ON SELECTION BAR 2 OF POPUP 库存管理k       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   34         
-*       * Called By:  ON SELECTION BAR 2 OF POPUP 库存管理k       
-*       * Prompt:     货架号设置                                  
-*       * Snippet:    8                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3ro
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\仓库号设置.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RP  ON SELECTION BAR 4 OF POPUP 库存管理k       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   37         
-*       * Called By:  ON SELECTION BAR 4 OF POPUP 库存管理k       
-*       * Prompt:     入库录入                                    
-*       * Snippet:    9                                           
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rp
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-IF c入库打印 = "1"
-  DO FORM ..\forms\入库录入打印.scx
-ELSE
-  DO FORM ..\forms\入库录入.scx
-ENDIF
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RQ  ON SELECTION BAR 5 OF POPUP 库存管理k       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   38         
-*       * Called By:  ON SELECTION BAR 5 OF POPUP 库存管理k       
-*       * Prompt:     入库查询                                    
-*       * Snippet:    10                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rq
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\入库查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RR  ON SELECTION BAR 7 OF POPUP 库存管理k       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   41         
-*       * Called By:  ON SELECTION BAR 7 OF POPUP 库存管理k       
-*       * Prompt:     查询当前库存                                
-*       * Snippet:    11                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rr
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\当前库存查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RS  ON SELECTION BAR 9 OF POPUP 库存管理k       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   44         
-*       * Called By:  ON SELECTION BAR 9 OF POPUP 库存管理k       
-*       * Prompt:     出库录入                                    
-*       * Snippet:    12                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rs
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-IF c出库打印 = "1"
-  DO FORM ..\forms\出库录入打印.scx
-ELSE
-  DO FORM ..\forms\出库录入.scx
-ENDIF
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RT  ON SELECTION BAR 10 OF POPUP 库存管理k      
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   45         
-*       * Called By:  ON SELECTION BAR 10 OF POPUP 库存管理k      
-*       * Prompt:     出库查询                                    
-*       * Snippet:    13                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rt
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\出库查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RU  ON SELECTION BAR 2 OF POPUP 财务管理c       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   52         
-*       * Called By:  ON SELECTION BAR 2 OF POPUP 财务管理c       
-*       * Prompt:     收录录入                                    
-*       * Snippet:    14                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3ru
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\收据录入.scx
-
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RV  ON SELECTION BAR 3 OF POPUP 财务管理c       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   53         
-*       * Called By:  ON SELECTION BAR 3 OF POPUP 财务管理c       
-*       * Prompt:     收据查询                                    
-*       * Snippet:    15                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rv
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\收据查询.scx
-
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RW  ON SELECTION BAR 4 OF POPUP 财务管理c       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   54         
-*       * Called By:  ON SELECTION BAR 4 OF POPUP 财务管理c       
-*       * Prompt:     应收款查询                                  
-*       * Snippet:    16                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rw
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\应收款查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RX  ON SELECTION BAR 6 OF POPUP 财务管理c       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   57         
-*       * Called By:  ON SELECTION BAR 6 OF POPUP 财务管理c       
-*       * Prompt:     付款单录入                                  
-*       * Snippet:    17                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rx
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\付款录入.scx
-
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RY  ON SELECTION BAR 7 OF POPUP 财务管理c       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   58         
-*       * Called By:  ON SELECTION BAR 7 OF POPUP 财务管理c       
-*       * Prompt:     付款单查询                                  
-*       * Snippet:    18                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3ry
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\付款查询.scx
-
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3RZ  ON SELECTION BAR 8 OF POPUP 财务管理c       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   59         
-*       * Called By:  ON SELECTION BAR 8 OF POPUP 财务管理c       
-*       * Prompt:     应付款查询                                  
-*       * Snippet:    19                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3rz
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-DO FORM ..\forms\应付款查询.scx
-
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3S0  ON SELECTION BAR 2 OF POPUP 转仓盘点z       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   66         
-*       * Called By:  ON SELECTION BAR 2 OF POPUP 转仓盘点z       
-*       * Prompt:     转仓录入                                    
-*       * Snippet:    20                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3s0
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\转仓录入.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3S1  ON SELECTION BAR 3 OF POPUP 转仓盘点z       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   67         
-*       * Called By:  ON SELECTION BAR 3 OF POPUP 转仓盘点z       
-*       * Prompt:     转仓查询                                    
-*       * Snippet:    21                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3s1
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\转仓查询.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3S2  ON SELECTION BAR 5 OF POPUP 转仓盘点z       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   70         
-*       * Called By:  ON SELECTION BAR 5 OF POPUP 转仓盘点z       
-*       * Prompt:     盘点录入                                    
-*       * Snippet:    22                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3s2
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\盘点录入.scx
-
-
-*       *********************************************************
-*       *                                                         
-*       * _5BL10K3S3  ON SELECTION BAR 6 OF POPUP 转仓盘点z       
-*       *                                                         
-*       * Procedure Origin:                                       
-*       *                                                         
-*       * From Menu:  EBWJXC.MPR,            Record:   71         
-*       * Called By:  ON SELECTION BAR 6 OF POPUP 转仓盘点z       
-*       * Prompt:     盘点查询                                    
-*       * Snippet:    23                                          
-*       *                                                         
-*       *********************************************************
-*
-PROCEDURE _5bl10k3s3
-CLOSE ALL
-
-FOR EACH FF IN _SCREEN.Forms
-FF.RELEASE
-NEXT
-
-do form ..\forms\Main.scx
-do form ..\forms\盘点查询.scx
