@@ -29,7 +29,7 @@ SET PATH TO ;DATA;FORMS;LIBS;MENUS;PROGS;REPORTS;BMP;EXCEL
 RELEASE c版本号,c版权,c系统日期,c测试
 PUBLIC  c版本号,c版权,c系统日期,c测试
 
-c版本号="环时表业ERP管理系统 Ver 1.9"
+c版本号="宜邦软件ERP管理系统 Ver 1.9"
 c版权 = '版权所有：(C)EbongSoft 2018'
 c系统日期 = DTOC(DATE())
 c测试=0   && 0 未测试状态 1 为测试状态
