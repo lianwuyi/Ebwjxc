@@ -17,7 +17,7 @@ USE
 TempStr1 = 'Eb123456'          && 登陆账号密码
 linkdb1 = 'driver=SQL Server;Server='  && 数据库类型
 linkdb1 = linkdb1+csqlserver           && 数据库路径
-linkdb1 = linkdb1+';Uid=sa;pwd=&TempStr1;database=hsbydb'
+linkdb1 = linkdb1+';Uid=sa;pwd=&TempStr1;database=ebwjxcdb'
 lnHandle= SQLSTRINGCONNECT(linkdb1)
 
 IF lnHandle <= 0 && 连接不成功,

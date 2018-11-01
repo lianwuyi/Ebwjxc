@@ -9,6 +9,7 @@ lnHandle = 0
 SELECT 0
 USE ..\Data\sys1.Dbf
 csqlserver = ALLTRIM(sqlserver)
+cdatabase = ALLTRIM(database)
 SQLSETPROP(0,"DispLogin" ,3) && 不打开ODBC连接界面
 USE
 
@@ -17,7 +18,7 @@ USE
 TempStr1 = 'Eb123456'          && 登陆账号密码
 linkdb1 = 'driver=SQL Server;Server='  && 数据库类型
 linkdb1 = linkdb1+csqlserver           && 数据库路径
-linkdb1 = linkdb1+';Uid=sa;pwd=&TempStr1;database=ebwjxcdb'
+linkdb1 = linkdb1+';Uid=sa;pwd=&TempStr1;database=&cdatabase'&&ebwjxcdb
 lnHandle= SQLSTRINGCONNECT(linkdb1)
 
 IF lnHandle <= 0 && 连接不成功,
