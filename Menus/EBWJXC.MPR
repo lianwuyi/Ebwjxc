@@ -1,6 +1,6 @@
 *       *********************************************************
 *       *                                                         
-*       * 10/31/18             EBWJXC.MPR               16:38:47  
+*       * 11/02/18             EBWJXC.MPR               16:28:21  
 *       *                                                         
 *       *********************************************************
 *       *                                                         
@@ -131,24 +131,24 @@ IF m.lHasNewMenu
 	DEFINE MENU (m.cMenuName) IN (m.oFormRef.Name) BAR
 ENDIF
 
-DEFINE PAD _5by0zog0d OF (m.cMenuName) PROMPT "系统设置(\<E)" COLOR SCHEME 3 ;
+DEFINE PAD _5c00zb1i2 OF (m.cMenuName) PROMPT "系统设置(\<E)" COLOR SCHEME 3 ;
 	KEY ALT+E, ""
-DEFINE PAD _5by0zog0e OF (m.cMenuName) PROMPT "基础信息(\<J)" COLOR SCHEME 3 ;
+DEFINE PAD _5c00zb1i3 OF (m.cMenuName) PROMPT "基础信息(\<J)" COLOR SCHEME 3 ;
 	KEY ALT+J, ""
-DEFINE PAD _5by0zog0f OF (m.cMenuName) PROMPT "库存管理(\<K)" COLOR SCHEME 3 ;
+DEFINE PAD _5c00zb1i4 OF (m.cMenuName) PROMPT "库存管理(\<K)" COLOR SCHEME 3 ;
 	KEY ALT+K, ""
-DEFINE PAD _5by0zog0g OF (m.cMenuName) PROMPT "财务管理(\<C)" COLOR SCHEME 3 ;
+DEFINE PAD _5c00zb1i5 OF (m.cMenuName) PROMPT "财务管理(\<C)" COLOR SCHEME 3 ;
 	KEY ALT+C, ""
-DEFINE PAD _5by0zog0h OF (m.cMenuName) PROMPT "转仓盘点(\<Z)" COLOR SCHEME 3 ;
+DEFINE PAD _5c00zb1i6 OF (m.cMenuName) PROMPT "转仓盘点(\<Z)" COLOR SCHEME 3 ;
 	KEY ALT+Z, ""
-DEFINE PAD _5by0zog0i OF (m.cMenuName) PROMPT "关于(\<A)" COLOR SCHEME 3 ;
+DEFINE PAD _5c00zb1i7 OF (m.cMenuName) PROMPT "关于(\<A)" COLOR SCHEME 3 ;
 	KEY ALT+A, ""
-ON PAD _5by0zog0d OF (m.cMenuName) ACTIVATE POPUP (a_menupops[1])
-ON PAD _5by0zog0e OF (m.cMenuName) ACTIVATE POPUP (a_menupops[2])
-ON PAD _5by0zog0f OF (m.cMenuName) ACTIVATE POPUP (a_menupops[3])
-ON PAD _5by0zog0g OF (m.cMenuName) ACTIVATE POPUP (a_menupops[4])
-ON PAD _5by0zog0h OF (m.cMenuName) ACTIVATE POPUP (a_menupops[5])
-ON PAD _5by0zog0i OF (m.cMenuName) ACTIVATE POPUP (a_menupops[6])
+ON PAD _5c00zb1i2 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[1])
+ON PAD _5c00zb1i3 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[2])
+ON PAD _5c00zb1i4 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[3])
+ON PAD _5c00zb1i5 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[4])
+ON PAD _5c00zb1i6 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[5])
+ON PAD _5c00zb1i7 OF (m.cMenuName) ACTIVATE POPUP (a_menupops[6])
 
 DEFINE POPUP (a_menupops[1]) MARGIN RELATIVE SHADOW COLOR SCHEME 4
 DEFINE BAR 1 OF (a_menupops[1]) PROMPT "\-"
@@ -233,7 +233,7 @@ DEFINE BAR 6 OF (a_menupops[6]) PROMPT "\-"
 DEFINE BAR 7 OF (a_menupops[6]) PROMPT "About"
 DEFINE BAR 8 OF (a_menupops[6]) PROMPT "\-"
 ON SELECTION BAR 5 OF (a_menupops[6]) ;
-	DO _5by0zog0j ;
+	DO _5c00zb1i8 ;
 	IN LOCFILE("\EBWJXC\MENUS\EBWJXC" ,"MPX;MPR|FXP;PRG" ,"WHERE is EBWJXC?")
 ON SELECTION BAR 7 OF (a_menupops[6]) do form about.scx
 
@@ -247,7 +247,7 @@ ENDIF
 
 *       *********************************************************
 *       *                                                         
-*       * _5BY0ZOG0J  ON SELECTION BAR 5 OF POPUP 关于a           
+*       * _5C00ZB1I8  ON SELECTION BAR 5 OF POPUP 关于a           
 *       *                                                         
 *       * Procedure Origin:                                       
 *       *                                                         
@@ -258,7 +258,7 @@ ENDIF
 *       *                                                         
 *       *********************************************************
 *
-PROCEDURE _5by0zog0j
+PROCEDURE _5c00zb1i8
 DECLARE INTEGER ShellExecute IN shell32.DLL INTEGER HWND, STRING,;
         STRING lpszFile,STRING ,STRING ,INTEGER
  lpszFile='www.ebongsoft.com'
